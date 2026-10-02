@@ -1,1 +1,1 @@
-active_policy_rules = [] # Creating a Temp Array to hold the rules from the PDF
+from app.policy.rules import PolicyRule, PolicyCondition

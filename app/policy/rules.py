@@ -1,22 +1,37 @@
-#Let make Rules
+#Let make Rules that define refunds,return, cancellation,warranty etc.
 from pydantic import BaseModel, Field
+from typing import Any, List, Optional  #Any variable can contain almost any Python type string,integer etc.
+                                        
 
+class PolicyCondition(BaseModel):
+    #rule_id: str
+    field:str
+    operator:str
+    value: Any 
+    #action: str
 
 class PolicyRule(BaseModel):
-    rule_id: str
-    action: str
+     rule_id:str
+     action: str
 
-    min_amount: float | None = None
-    max_amount: float | None = None
+     conditions: List[PolicyCondition] = Field(default_factory=list)
 
-    decision: str
-    reason: str
+     decision:str
+     action: str 
+
+     priority: int = 0
+
+    #min_amount: float | None = None
+    #max_amount: float | None = None
+
+    #decision: str
+    #reason: str
 
     conditions: list[str] = Field(default_factory=list)
 
     priority: int = 0
 
-
+"""
 POLICY_RULES = [
 
     PolicyRule(
@@ -66,3 +81,4 @@ POLICY_RULES = [
         priority=100
     )
 ]
+"""
