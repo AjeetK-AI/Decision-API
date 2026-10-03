@@ -1,5 +1,3 @@
-#Parse the relevant document or section from POLICY
-
 import json
 
 from app.llm.client import client
@@ -7,16 +5,12 @@ from app.llm.prompts import POLICY_EXTRACTION_PROMPT
 from app.policy.rules import PolicyRule
 
 
-MODEL = "llama-3.3-70b-versatile"
-
-
 def extract_policy_rules_with_llm(
     policy_text: str,
 ) -> list[PolicyRule]:
 
     response = client.chat.completions.create(
-        model=MODEL,
-        temperature=0,
+        model="openai/gpt-oss-120b",
         response_format={
             "type": "json_object"
         },

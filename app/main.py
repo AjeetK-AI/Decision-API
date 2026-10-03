@@ -2,8 +2,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from app.models.gmail import EmailRequest, DecisionResponse
 from app.decision.engine import decide
-from app.policy.engine import check_policy
-from app.policy.parser import extract_policy_rules
+from app.services.llm_policy_parser import extract_policy_rules_with_llm
 from app.policy.store import active_policy_rules
 
 from pypdf import PdfReader
@@ -69,7 +68,7 @@ async def upload_policy(file: UploadFile = File(...)):
                 text += page_text + "\n"
 
         # 5. Return extracted information
-        rules = extract_policy_rules(text)
+        rules = extract_policy_rules_with_llm(text)
 
         active_policy_rules.clear()
         active_policy_rules.extend(rules)

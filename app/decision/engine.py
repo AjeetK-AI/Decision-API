@@ -1,5 +1,5 @@
 from app.models.gmail import EmailRequest, DecisionResponse
-from app.policy.engine import check_policy
+from app.decision.policy_decision import make_policy_decision
 
 
 def decide(email: EmailRequest) -> DecisionResponse:
@@ -41,19 +41,33 @@ def decide(email: EmailRequest) -> DecisionResponse:
 
     if intent == "refund":
 
-        amount = email.amount
+    # 2. If refund, check company policy
 
-        rule = check_policy(
-            action="refund",
-            amount=amount,
-            days_since_purchase=email.days_since_purchase,
-            evidence_present=email.evidence_present,
-            fraud_indicator=email.fraud_indicator
-        )
+     if intent == "refund":
 
+      facts = {
+        "amount": email.amount,
+        "days_since_purchase": email.days_since_purchase,
+        "evidence_present": email.evidence_present,
+        "fraud_indicator": email.fraud_indicator
+    }
+
+      policy_result = make_policy_decision(
+        action="refund",
+        facts=facts
+    )
+
+    return DecisionResponse(
+        intent="refund",
+        risk="normal",
+        decision=policy_result["decision"],
+        request_approval=policy_result["request_approval"]
+    )
+
+    
         # 3. No matching policy
 
-        if rule is None:
+    if rule is None:
             return DecisionResponse(
                 intent="refund",
                 risk="unknown",
@@ -63,7 +77,7 @@ def decide(email: EmailRequest) -> DecisionResponse:
 
         # 4. Policy matched
 
-        return DecisionResponse(
+    return DecisionResponse(
             intent="refund",
             risk="normal",
             decision=rule.decision,
