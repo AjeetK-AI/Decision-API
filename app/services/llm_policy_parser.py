@@ -17,11 +17,11 @@ def extract_policy_rules_with_llm(
         messages=[
             {
                 "role": "system",
-                "content": POLICY_EXTRACTION_PROMPT,
+                "content": str(POLICY_EXTRACTION_PROMPT),
             },
             {
                 "role": "user",
-                "content": policy_text,
+                "content": str(policy_text),
             },
         ],
     )

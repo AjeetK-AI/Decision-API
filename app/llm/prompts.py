@@ -1,32 +1,13 @@
 POLICY_EXTRACTION_PROMPT = """
 You are a policy extraction system.
 
-Your job is to read a company's policy document and convert
-ALL applicable policy rules into structured JSON.
+Your job is to read a company policy document and extract
+the business rules that can be evaluated by a software
+policy decision engine.
 
-IMPORTANT:
 Return ONLY valid JSON.
 
-You MUST extract EVERY explicit numbered rule from the
-policy document.
-
-For example, if the document contains:
-
-Rule 2.1
-Rule 2.2
-Rule 2.3
-Rule 3.1
-Rule 3.2
-
-then all of them must be represented in the output.
-
-Do NOT stop after extracting the first few rules.
-
-Do NOT summarize the policy.
-
-Do NOT omit rules because they appear similar to another rule.
-
-The response must be:
+The response must have this structure:
 
 {
   "rules": [
@@ -47,51 +28,93 @@ The response must be:
   ]
 }
 
-Rules:
+IMPORTANT:
 
-1. Extract every explicit numbered policy rule.
+1. Extract all relevant decision-making rules from the policy.
 
-2. Preserve the original rule number when possible.
-For example:
-"Rule 3.2" → rule_id "3.2".
+2. Do NOT summarize the entire policy.
 
-3. Do NOT invent rules.
+3. Do NOT invent rules or information.
 
-4. Do NOT invent conditions that are not supported
-by the policy.
+4. Preserve the meaning of the original policy.
 
-5. Preserve monetary thresholds exactly.
+5. Extract monetary thresholds.
 
-6. Preserve time limits exactly.
+6. Extract time limits.
 
-7. Preserve evidence requirements.
+7. Extract evidence requirements.
 
-8. Preserve fraud and exception requirements.
+8. Extract fraud requirements.
 
-9. Preserve escalation and approval requirements.
+9. Extract exception requirements.
 
-10. Preserve employee expense rules.
+10. Extract escalation requirements.
 
-11. Preserve missing-information requirements.
+11. Extract approval requirements.
 
-12. If a rule describes a requirement that cannot be
-represented as a simple condition, still extract it
-using the closest structured representation.
+12. Extract eligibility requirements.
 
-13. If multiple conditions are required simultaneously,
-represent them as multiple conditions.
+13. Extract prohibition requirements.
 
-14. If a rule overrides another rule, preserve that
-relationship in the reason or structured representation.
+14. If a rule contains multiple conditions, represent
+    them as separate conditions.
 
-15. The priority should reflect policy precedence where
-the document explicitly indicates precedence.
+15. Use simple machine-readable field names such as:
 
-16. Do not use examples in the document as substitutes
-for the actual numbered rules.
+    amount
+    days_since_purchase
+    evidence_present
+    fraud_indicator
+    defective
+    warranty_months
+    receipt_present
 
-17. The examples may be useful for understanding the
-rules, but the numbered rules themselves are authoritative.
+16. Use these operators where appropriate:
 
-18. Return ONLY the JSON object.
+    ==
+    !=
+    >
+    >=
+    <
+    <=
+    contains
+    exists
+
+17. The action should describe what the rule applies to,
+    such as:
+
+    refund
+    return
+    cancellation
+    warranty
+    expense
+    approval
+
+18. The decision should represent what the system should do,
+    such as:
+
+    APPROVE
+    REJECT
+    MANAGER_APPROVAL
+    FINANCE_APPROVAL
+    FRAUD_REVIEW
+    HUMAN_REVIEW
+
+19. The reason should briefly explain why the rule produces
+    that decision.
+
+20. Priority should normally be 0.
+
+21. Higher priority should only be used when the policy
+    explicitly states that a rule overrides another rule.
+
+22. Give every extracted rule a unique rule_id.
+
+23. Do not use information from outside the supplied policy.
+
+24. Return ONLY the JSON object.
+
+COMPANY POLICY DOCUMENT:
+
+{policy_text}
 """

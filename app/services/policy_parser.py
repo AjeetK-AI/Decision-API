@@ -1,49 +1,39 @@
-#Parse the relevant document or section from POLICY
-
-import json
-
-from app.llm.client import client
-from app.llm.prompts import POLICY_EXTRACTION_PROMPT
-from app.policy.rules import PolicyRule
+import re
 
 
-MODEL = "llama-3.3-70b-versatile"
-
-
-def extract_policy_rules_with_llm(
+def extract_policy_rules(
     policy_text: str,
-) -> list[PolicyRule]:
+) -> list[dict[str, str]]:
+    """
+    Split policy text into individual policy rules.
 
-    response = client.chat.completions.create(
-        model=MODEL,
-        temperature=0,
-        response_format={
-            "type": "json_object"
-        },
-        messages=[
-            {
-                "role": "system",
-                "content": POLICY_EXTRACTION_PROMPT,
-            },
-            {
-                "role": "user",
-                "content": policy_text,
-            },
-        ],
+    This parser does not interpret the meaning of a rule.
+    It only identifies the rule ID and rule text.
+
+    The extracted rule blocks are passed to the LLM parser.
+    """
+
+    rule_blocks: list[dict[str, str]] = []
+
+    pattern = re.compile(
+        r"Rule\s+([0-9]+(?:\.[0-9]+)*)\s*:\s*"
+        r"(.*?)(?=\s*Rule\s+[0-9]+(?:\.[0-9]+)*\s*:|\Z)",
+        re.IGNORECASE | re.DOTALL,
     )
 
-    content = response.choices[0].message.content
+    matches = pattern.findall(policy_text)
 
-    if not content:
-        raise ValueError(
-            "LLM returned an empty response"
+    for rule_id, rule_text in matches:
+
+        cleaned_text = " ".join(
+            rule_text.split()
         )
 
-    data = json.loads(content)
+        rule_blocks.append(
+            {
+                "rule_id": rule_id,
+                "text": cleaned_text,
+            }
+        )
 
-    rules_data = data.get("rules", [])
-
-    return [
-        PolicyRule(**rule)
-        for rule in rules_data
-    ]
+    return rule_blocks
