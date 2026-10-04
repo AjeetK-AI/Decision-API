@@ -1,39 +1,65 @@
-import re
+import json
+
+from app.llm.client import client
+from app.llm.prompts import POLICY_EXTRACTION_PROMPT
+from app.policy.rules import PolicyRule
 
 
-def extract_policy_rules(
-    policy_text: str,
-) -> list[dict[str, str]]:
-    """
-    Split policy text into individual policy rules.
+MODEL = "openai/gpt-oss-120b"
 
-    This parser does not interpret the meaning of a rule.
-    It only identifies the rule ID and rule text.
 
-    The extracted rule blocks are passed to the LLM parser.
-    """
+def extract_policy_rules_with_llm(
+    rule_blocks: list[dict[str, str]],
+) -> list[PolicyRule]:
 
-    rule_blocks: list[dict[str, str]] = []
+    all_rules: list[PolicyRule] = []
 
-    pattern = re.compile(
-        r"Rule\s+([0-9]+(?:\.[0-9]+)*)\s*:\s*"
-        r"(.*?)(?=\s*Rule\s+[0-9]+(?:\.[0-9]+)*\s*:|\Z)",
-        re.IGNORECASE | re.DOTALL,
-    )
+    for rule in rule_blocks:
 
-    matches = pattern.findall(policy_text)
+        rule_id = rule["rule_id"]
+        rule_text = rule["text"]
 
-    for rule_id, rule_text in matches:
-
-        cleaned_text = " ".join(
-            rule_text.split()
+        prompt = POLICY_EXTRACTION_PROMPT.format(
+            rule_id=rule_id,
+            rule_text=rule_text,
         )
 
-        rule_blocks.append(
-            {
-                "rule_id": rule_id,
-                "text": cleaned_text,
-            }
+        response = client.chat.completions.create(
+            model=MODEL,
+            temperature=0,
+            response_format={
+                "type": "json_object"
+            },
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a policy extraction system. "
+                        "Convert the supplied policy rule into "
+                        "structured JSON. Return JSON only."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": prompt,
+                },
+            ],
         )
 
-    return rule_blocks
+        content = response.choices[0].message.content
+
+        if not content:
+            raise ValueError(
+                f"LLM returned an empty response "
+                f"for rule {rule_id}"
+            )
+
+        data = json.loads(content)
+
+        rule_data = data.get("rule", data)
+
+        all_rules.append(
+            PolicyRule(**rule_data)
+        )
+
+    return all_rules

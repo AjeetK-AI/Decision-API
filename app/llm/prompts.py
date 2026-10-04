@@ -1,120 +1,83 @@
 POLICY_EXTRACTION_PROMPT = """
-You are a policy extraction system.
+You are a policy rule structuring system.
 
-Your job is to read a company policy document and extract
-the business rules that can be evaluated by a software
-policy decision engine.
+Your job is to convert ONE policy rule extracted from a
+company policy document into structured JSON.
+
+Do NOT search for additional rules.
+
+Do NOT invent information.
 
 Return ONLY valid JSON.
 
+Preserve the exact meaning of the original rule.
+
 The response must have this structure:
 
-{
-  "rules": [
-    {
-      "rule_id": "string",
-      "action": "string",
-      "conditions": [
-        {
-          "field": "string",
-          "operator": "string",
-          "value": "any JSON value"
-        }
-      ],
-      "decision": "string",
-      "reason": "string",
-      "priority": 0
-    }
-  ]
-}
+{{
+  "rule_id": "string",
+  "action": "string",
+  "conditions": [
+    {{
+      "field": "string",
+      "operator": "string",
+      "value": "any JSON value"
+    }}
+  ],
+  "decision": "string",
+  "reason": "string",
+  "priority": 0
+}}
 
-IMPORTANT:
+Instructions:
 
-1. Extract all relevant decision-making rules from the policy.
+1. Preserve the supplied rule_id exactly.
 
-2. Do NOT summarize the entire policy.
+2. Identify the action described by the rule.
 
-3. Do NOT invent rules or information.
+3. Extract all conditions explicitly stated by the rule.
 
-4. Preserve the meaning of the original policy.
+4. Preserve monetary thresholds exactly.
 
-5. Extract monetary thresholds.
+5. Preserve time limits exactly.
 
-6. Extract time limits.
+6. Preserve evidence requirements.
 
-7. Extract evidence requirements.
+7. Preserve fraud requirements.
 
-8. Extract fraud requirements.
+8. Preserve exception requirements.
 
-9. Extract exception requirements.
+9. Preserve escalation requirements.
 
-10. Extract escalation requirements.
+10. Preserve approval requirements.
 
-11. Extract approval requirements.
+11. If multiple conditions must all be satisfied,
+represent them as separate conditions.
 
-12. Extract eligibility requirements.
+12. If the rule requires approval or review, represent
+that requirement in the decision field.
 
-13. Extract prohibition requirements.
+13. If the rule prohibits an action, represent that
+prohibition in the decision field.
 
-14. If a rule contains multiple conditions, represent
-    them as separate conditions.
+14. Do not create information that is not present
+in the rule.
 
-15. Use simple machine-readable field names such as:
+15. The reason should briefly explain the rule using
+the original meaning.
 
-    amount
-    days_since_purchase
-    evidence_present
-    fraud_indicator
-    defective
-    warranty_months
-    receipt_present
+16. Priority should normally be 0 unless the supplied
+rule explicitly indicates precedence or priority.
 
-16. Use these operators where appropriate:
+17. Do not use examples or information from other rules.
 
-    ==
-    !=
-    >
-    >=
-    <
-    <=
-    contains
-    exists
+18. Return ONLY the JSON object.
 
-17. The action should describe what the rule applies to,
-    such as:
+The policy rule to structure is:
 
-    refund
-    return
-    cancellation
-    warranty
-    expense
-    approval
+Rule ID:
+{rule_id}
 
-18. The decision should represent what the system should do,
-    such as:
-
-    APPROVE
-    REJECT
-    MANAGER_APPROVAL
-    FINANCE_APPROVAL
-    FRAUD_REVIEW
-    HUMAN_REVIEW
-
-19. The reason should briefly explain why the rule produces
-    that decision.
-
-20. Priority should normally be 0.
-
-21. Higher priority should only be used when the policy
-    explicitly states that a rule overrides another rule.
-
-22. Give every extracted rule a unique rule_id.
-
-23. Do not use information from outside the supplied policy.
-
-24. Return ONLY the JSON object.
-
-COMPANY POLICY DOCUMENT:
-
-{policy_text}
+Rule Text:
+{rule_text}
 """
