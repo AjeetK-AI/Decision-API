@@ -2,7 +2,9 @@ from app.services.llm_policy_parser import (
     extract_policy_rules_with_llm
 )
 
+
 print("TEST STARTED")
+
 
 rule_blocks = [
     {
@@ -21,17 +23,22 @@ rule_blocks = [
     },
 ]
 
+
 print("RULE BLOCKS CREATED")
 print(rule_blocks)
 
+
 print("CALLING LLM...")
+
 
 rules = extract_policy_rules_with_llm(
     rule_blocks
 )
 
+
 print("LLM CALL COMPLETED")
 print("NUMBER OF RULES:", len(rules))
+
 
 for rule in rules:
     print("\nRULE:")
