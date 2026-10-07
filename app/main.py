@@ -14,7 +14,7 @@ import os
 
 
 app = FastAPI(
-    title="Gmail Decision API",
+    title="Policy Flow",
     version="1.01.2"
 )
 
